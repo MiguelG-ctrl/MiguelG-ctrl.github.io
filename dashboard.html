@@ -1,0 +1,281 @@
+
+<html>
+<head>
+    <title>Dashboard del Examen de Egreso</title>
+    <meta charset="utf-8">
+
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #d8d8db; /* más oscuro */
+            color: #222;
+        }
+
+        /* ---------- TOPBAR ---------- */
+        .topbar {
+            background: #111827;
+            color: #f9fafb;
+            padding: 20px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .topbar h1 {
+            margin: 0;
+            font-size: 22px;
+        }
+        .topbar span {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        /* ---------- CONTAINERS ---------- */
+        .container {
+            max-width: 1200px;
+            margin: 24px auto 40px;
+            padding: 0 16px;
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .kpi-card {
+            background: #ffffff;
+            border-radius: 18px;
+            padding: 20px 24px;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.12);
+            cursor: default; /* YA NO ES CLICKEABLE */
+        }
+        .kpi-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #6b7280;
+        }
+        .kpi-value {
+            font-size: 28px;
+            font-weight: 600;
+        }
+        .kpi-sub {
+            font-size: 13px;
+            color: #6b7280;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin: 24px 4px 10px;
+            color: #374151;
+        }
+
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+        }
+        .card {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 14px 14px 20px;
+            box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 14px 35px rgba(15, 23, 42, 0.15);
+        }
+        .card h3 {
+            margin: 4px 8px 10px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #374151;
+        }
+        .card img {
+            width: 100%;
+            border-radius: 12px;
+        }
+
+        /* ---------- MODAL ---------- */
+        .modal-bg {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.55);
+            backdrop-filter: blur(4px);
+            align-items: center;
+            justify-content: center;
+            z-index: 99;
+        }
+        .modal {
+            background: #ffffff;
+            width: 80%;
+            max-width: 900px;
+            padding: 20px 30px;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.25);
+            animation: fadeIn 0.2s ease-out;
+            position: relative;
+        }
+        .modal h2 {
+            margin-top: 0;
+            color: #111827;
+            font-size: 20px;
+        }
+        .modal img {
+            width: 100%;
+            border-radius: 12px;
+            margin-top: 10px;
+        }
+        .modal-close {
+            margin-top: 12px;
+        }
+        .modal-close button {
+            background: #111827;
+            color: white;
+            padding: 8px 14px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.96); }
+            to   { opacity: 1; transform: scale(1); }
+        }
+    </style>
+
+</head>
+
+<body>
+
+<!-- ---------- TOP BAR ---------- -->
+<div class="topbar">
+    <div>
+        <h1>Dashboard del Examen de Egreso</h1>
+        <span>Distribución de preguntas, tiempos estimados y promedios por tipo de reactivo</span>
+    </div>
+</div>
+
+<div class="container">
+
+    <!-- ---------- KPIs (Sin click) ---------- -->
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <div class="kpi-label">Total de preguntas</div>
+            <div class="kpi-value">309</div>
+            <div class="kpi-sub">Sesión 1: 173 · Sesión 2: 136</div>
+        </div>
+
+        <div class="kpi-card">
+            <div class="kpi-label">Tiempo total estimado</div>
+            <div class="kpi-value">206 min</div>
+            <div class="kpi-sub">Sesión 1: 64.5 min · Sesión 2: 141.5 min</div>
+        </div>
+
+        <div class="kpi-card">
+            <div class="kpi-label">Tiempos promedio</div>
+            <div class="kpi-sub">
+                Prog. simple: 30s · Prog. compleja: 62s<br>
+                Lectura: 120s · Abiertas: 60s · ABCD: 12s
+            </div>
+        </div>
+    </div>
+
+    <!-- ---------- DISTRIBUCIÓN ---------- -->
+    <div class="section-title">Distribución de preguntas</div>
+    <div class="card-grid">
+        <div class="card" onclick="openModal('Distribución Sesión 1', 'session1.png')">
+            <h3>Sesión 1</h3>
+            <img src="session1.png">
+        </div>
+
+        <div class="card" onclick="openModal('Distribución Sesión 2', 'session2.png')">
+            <h3>Sesión 2</h3>
+            <img src="session2.png">
+        </div>
+
+        <div class="card" onclick="openModal('Distribución Total', 'overall_pie.png')">
+            <h3>Distribución total del examen</h3>
+            <img src="overall_pie.png">
+        </div>
+    </div>
+
+    <!-- ---------- TIEMPOS ---------- -->
+    <div class="section-title">Tiempos estimados por sesión</div>
+    <div class="card-grid">
+        <div class="card" onclick="openModal('Tiempos Sesión 1', 'tiempos_sesion1.png')">
+            <h3>Tiempos Sesión 1</h3>
+            <img src="tiempos_sesion1.png">
+        </div>
+
+        <div class="card" onclick="openModal('Tiempos Sesión 2', 'tiempos_sesion2.png')">
+            <h3>Tiempos Sesión 2</h3>
+            <img src="tiempos_sesion2.png">
+        </div>
+
+        <div class="card" onclick="openModal('Comparativa de Tiempo', 'tiempos_comparativa.png')">
+            <h3>Comparativa de duración</h3>
+            <img src="tiempos_comparativa.png">
+        </div>
+    </div>
+
+    <div class="section-title">Vista global de tiempos</div>
+    <div class="card-grid">
+        <div class="card" onclick="openModal('Distribución del Tiempo Total', 'pie_tiempos.png')">
+            <h3>Distribución del Tiempo Total</h3>
+            <img src="pie_tiempos.png">
+        </div>
+
+        <div class="card" onclick="openModal('Tiempo Promedio por Tipo de Pregunta', 'tiempos_promedio.png')">
+            <h3>Tiempo Promedio por Tipo</h3>
+            <img src="tiempos_promedio.png">
+        </div>
+    </div>
+
+</div>
+
+<!-- ---------- MODAL ---------- -->
+<div class="modal-bg" id="modal">
+    <div class="modal" onclick="event.stopPropagation()">
+        <h2 id="modal-title"></h2>
+        <img id="modal-img">
+        <div class="modal-close">
+            <button onclick="closeModal()">Cerrar</button>
+        </div>
+    </div>
+</div>
+
+<!-- ---------- JS ---------- -->
+<script>
+function openModal(title, imgSrc) {
+    document.getElementById("modal-title").innerText = title;
+    document.getElementById("modal-img").src = imgSrc;
+    document.getElementById("modal").style.display = "flex";
+}
+
+// Cerrar con click fuera
+document.getElementById("modal").addEventListener("click", function() {
+    closeModal();
+});
+
+// Cerrar con ESC
+document.addEventListener("keydown", function(evt) {
+    if (evt.key === "Escape") {
+        closeModal();
+    }
+});
+
+function closeModal() {
+    document.getElementById("modal").style.display = "none";
+}
+</script>
+
+</body>
+</html>
+

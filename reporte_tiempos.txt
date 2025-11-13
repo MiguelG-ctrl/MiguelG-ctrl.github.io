@@ -1,0 +1,26 @@
+
+===========================
+REPORTE DE TIEMPOS ESTIMADOS
+===========================
+
+SESIÓN 1:
+- Programación: 42.67 min
+- ABCD: 21.80 min
+- Total Sesión 1: 64.47 min
+
+SESIÓN 2:
+- Programación: 19.30 min
+- Lectura: 80.00 min
+- Abiertas: 36.00 min
+- ABCD: 6.20 min
+- Total Sesión 2: 141.50 min
+
+DURACIÓN TOTAL ESTIMADA:
+≈ 205.97 minutos
+
+TIEMPOS PROMEDIO POR TIPO:
+- Programación simple: 30s
+- Programación compleja: 62s
+- Lectura: 120s
+- Abiertas: 60s
+- ABCD: 12s
