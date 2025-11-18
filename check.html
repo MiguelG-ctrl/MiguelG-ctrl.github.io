@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <title>Dashboard del Examen de Egreso</title>
+
+    <!-- Chart.js y plugin de datalabels -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            margin: 0;
+            background: #cfd0d4;
+            color: #222;
+        }
+
+        /* TOPBAR */
+        .topbar {
+            background: #111827;
+            color: #f9fafb;
+            padding: 20px 32px;
+        }
+        .topbar h1 { margin: 0; font-size: 22px; }
+        .topbar span { font-size: 14px; opacity: 0.8; }
+
+        /* CONTENEDOR */
+        .container {
+            max-width: 1200px;
+            margin: 24px auto 50px;
+            padding: 0 16px;
+        }
+
+        /* KPI CARDS */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 22px;
+            margin-bottom: 32px;
+        }
+        .kpi-card {
+            background: #fff;
+            border-radius: 18px;
+            padding: 22px 24px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+        .kpi-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            color: #6b7280;
+        }
+        .kpi-value {
+            font-size: 30px;
+            font-weight: 700;
+        }
+        .kpi-sub {
+            font-size: 13px;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+
+        /* SECCIONES */
+        .section-divider {
+            margin: 55px 0 20px;
+            padding-left: 12px;
+            border-left: 6px solid #111827;
+        }
+        .section-divider h2 {
+            margin: 0;
+            font-size: 22px;
+            font-weight: 700;
+        }
+        .section-block {
+            background: #e7e7eb;
+            padding: 28px;
+            border-radius: 20px;
+            margin-bottom: 40px;
+            box-shadow: 0 12px 26px rgba(0,0,0,0.08);
+        }
+
+        /* TARJETAS DE GRÁFICAS */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+            gap: 20px;
+        }
+        .card {
+            background: white;
+            border-radius: 18px;
+            padding: 18px 16px 24px;
+            box-shadow: 0 10px 25px rgba(15,23,42,0.15);
+            cursor: pointer;
+            transition: 0.25s;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 14px 35px rgba(15,23,42,0.22);
+        }
+        .card h3 {
+            margin: 4px 6px 12px;
+            font-size: 16px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        /* Proporción 4:3 en tarjetas */
+        .chart-wrapper {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 4 / 3;
+        }
+        .chart-wrapper canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        /* MODAL */
+        .modal-bg {
+            display: none;
+            position: fixed;
+            top:0; left:0;
+            width:100%; height:100%;
+            background: rgba(0,0,0,0.55);
+            backdrop-filter: blur(4px);
+            align-items:center;
+            justify-content:center;
+            z-index: 200;
+        }
+        .modal {
+            background:#fff;
+            width: 88%;
+            max-width: 900px;
+            padding: 26px 32px;
+            border-radius: 20px;
+            box-shadow: 0 20px 45px rgba(0,0,0,0.25);
+            animation: fadeIn .2s ease-out;
+        }
+        .modal h2 {
+            margin-top:0;
+            font-size:22px;
+            font-weight:700;
+        }
+
+        /* Proporción 1:1 en modal */
+        .modal-canvas-wrapper {
+            width:100%;
+            max-width:700px;
+            margin:0 auto;
+            aspect-ratio:1 / 1;
+            position:relative;
+        }
+        .modal-canvas-wrapper canvas {
+            width:100% !important;
+            height:100% !important;
+        }
+
+        .modal-close {
+            text-align:right;
+            margin-top:12px;
+        }
+        .modal-close button {
+            background:#111827;
+            color:white;
+            padding:8px 14px;
+            border:none;
+            border-radius:8px;
+            cursor:pointer;
+        }
+
+        @keyframes fadeIn {
+            from { opacity:0; transform:scale(.95); }
+            to   { opacity:1; transform:scale(1); }
+        }
+
+        /* RESPONSIVE */
+        @media(max-width:768px) {
+            .card-grid { grid-template-columns:1fr; }
+            .kpi-grid { grid-template-columns:1fr; }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="topbar">
+    <div>
+        <h1>Dashboard del Examen de Egreso</h1>
+        <span>Distribución de preguntas y tiempos estimados</span>
+    </div>
+</div>
+
+<div class="container">
+
+    <!-- KPIs -->
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <div class="kpi-label">Total de preguntas</div>
+            <div class="kpi-value"><span id="kpi-total-preguntas">0</span></div>
+            <div class="kpi-sub">Sesión 1: 173 · Sesión 2: 136</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">Tiempo total estimado</div>
+            <div class="kpi-value"><span id="kpi-tiempo-total">0</span> min</div>
+            <div class="kpi-sub">
+                S1: <span id="kpi-tiempo-s1">0</span> min · 
+                S2: <span id="kpi-tiempo-s2">0</span> min
+            </div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">Tiempos promedio</div>
+            <div class="kpi-sub">
+                Prog simple 30s · Compleja 62s<br>
+                Lectura 120s · Abiertas 60s · ABCD 12s
+            </div>
+        </div>
+    </div>
+
+    <!-- SECCIÓN 1 -->
+    <div class="section-divider"><h2>Distribución del Examen</h2></div>
+    <div class="section-block">
+        <div class="card-grid">
+            <div class="card" onclick="openModalChart('Distribución Sesión 1','distS1')">
+                <h3>Sesión 1</h3>
+                <div class="chart-wrapper"><canvas id="chart-dist-s1"></canvas></div>
+            </div>
+            <div class="card" onclick="openModalChart('Distribución Sesión 2','distS2')">
+                <h3>Sesión 2</h3>
+                <div class="chart-wrapper"><canvas id="chart-dist-s2"></canvas></div>
+            </div>
+            <div class="card" onclick="openModalChart('Distribución Total del Examen','distTotal')">
+                <h3>Distribución Total</h3>
+                <div class="chart-wrapper"><canvas id="chart-dist-total"></canvas></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECCIÓN 2 -->
+    <div class="section-divider"><h2>Tiempos Estimados por Sesión</h2></div>
+    <div class="section-block">
+        <div class="card-grid">
+            <div class="card" onclick="openModalChart('Tiempos Sesión 1','timeS1')">
+                <h3>Tiempos Sesión 1</h3>
+                <div class="chart-wrapper"><canvas id="chart-time-s1"></canvas></div>
+            </div>
+            <div class="card" onclick="openModalChart('Tiempos Sesión 2','timeS2')">
+                <h3>Tiempos Sesión 2</h3>
+                <div class="chart-wrapper"><canvas id="chart-time-s2"></canvas></div>
+            </div>
+            <div class="card" onclick="openModalChart('Comparativa Sesiones','timeCompare')">
+                <h3>Comparativa Sesiones</h3>
+                <div class="chart-wrapper"><canvas id="chart-time-compare"></canvas></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECCIÓN 3 -->
+    <div class="section-divider"><h2>Vista Global de Tiempos</h2></div>
+    <div class="section-block">
+        <div class="card-grid">
+            <div class="card" onclick="openModalChart('Distribución del Tiempo Total','timePie')">
+                <h3>Distribución del Tiempo Total</h3>
+                <div class="chart-wrapper"><canvas id="chart-time-pie"></canvas></div>
+            </div>
+            <div class="card" onclick="openModalChart('Tiempo Promedio por Tipo','timeAvg')">
+                <h3>Tiempo Promedio por Tipo</h3>
+                <div class="chart-wrapper"><canvas id="chart-time-avg"></canvas></div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- MODAL -->
+<div class="modal-bg" id="modal-bg">
+    <div class="modal" onclick="event.stopPropagation()">
+        <h2 id="modal-title"></h2>
+        <div class="modal-canvas-wrapper">
+            <canvas id="modal-canvas"></canvas>
+        </div>
+        <div class="modal-close">
+            <button onclick="closeModal()">Cerrar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+/* ============================
+   Datos base
+============================ */
+const session1 = { 'Programación':64, 'Redes':58, 'Desarrollo/Admon':31, 'Innovación y Ciencia de Datos':20 };
+const session2 = { 'Programación':29, 'Redes':9, 'Desarrollo/Admon':5, 'Innovación y Ciencia de Datos':17, 'Lectura':40, 'Preguntas Abiertas':36 };
+
+const totalPreguntas = 173 + 136;
+const tSimple=30, tComplex=62, tRead=120, tOpen=60, tAbcd=12;
+
+let s1simple = Math.floor(session1['Programación']*0.7);
+let s1complex = session1['Programación'] - s1simple;
+let tiempoProg1 = s1simple*tSimple + s1complex*tComplex;
+let tiempoAbcd1 = (173 - session1['Programación']) * tAbcd;
+
+let s2simple = Math.floor(session2['Programación']*0.7);
+let s2complex = session2['Programación'] - s2simple;
+let tiempoProg2 = s2simple*tSimple + s2complex*tComplex;
+let tiempoLectura = session2['Lectura']*tRead;
+let tiempoAbiertas = session2['Preguntas Abiertas']*tOpen;
+let tiempoAbcd2 = (session2['Redes'] + session2['Desarrollo/Admon'] + session2['Innovación y Ciencia de Datos']) * tAbcd;
+
+let t1 = (tiempoProg1 + tiempoAbcd1)/60;
+let t2 = (tiempoProg2 + tiempoLectura + tiempoAbiertas + tiempoAbcd2)/60;
+let tTotal = t1 + t2;
+
+const tiemposTotalesCategoria = {
+    'Programación': (tiempoProg1+tiempoProg2)/60,
+    'Lectura': tiempoLectura/60,
+    'Abiertas': tiempoAbiertas/60,
+    'ABCD': (tiempoAbcd1+tiempoAbcd2)/60
+};
+
+const overall = {
+    'Programación': session1['Programación']+session2['Programación'],
+    'Redes': session1['Redes']+session2['Redes'],
+    'Desarrollo/Admon': session1['Desarrollo/Admon']+session2['Desarrollo/Admon'],
+    'Innovación y Ciencia de Datos': session1['Innovación y Ciencia de Datos']+session2['Innovación y Ciencia de Datos'],
+    'Lectura': session2['Lectura'],
+    'Preguntas Abiertas': session2['Preguntas Abiertas']
+};
+
+/* ============================
+   Animar KPIs
+============================ */
+function animateValue(el,start,end,dur,dec=0){
+    const range = end-start;
+    const startTime = performance.now();
+    function step(current){
+        const progress = Math.min((current-startTime)/dur,1);
+        el.textContent = (start + range*progress).toFixed(dec);
+        if(progress<1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+}
+
+/* ============================
+   Configuración global Chart.js
+   (registrar datalabels)
+============================ */
+Chart.register(ChartDataLabels);
+
+/* Estilo global de datalabels */
+const dataLabelBar = {
+    anchor: 'end',
+    align: 'end',
+    offset: 4,
+    color: '#111',
+    font: { size: 11, weight: 'bold' },
+    formatter: (value) => value.toFixed ? value.toFixed(1) : value
+};
+
+const dataLabelPie = {
+    color: '#111',
+    font: { size: 11, weight: 'bold' },
+    formatter: (value, ctx) => ctx.chart.data.labels[ctx.dataIndex] + ': ' + value.toFixed(1)
+};
+
+/* ============================
+   Configuración de gráficos
+============================ */
+let modalChart = null;
+let smallCharts = {};
+
+const config = {
+    distS1: {
+        type:'bar',
+        data:{ labels:Object.keys(session1),
+               datasets:[{ data:Object.values(session1), backgroundColor:'#3b82f6aa' }] },
+        options:{
+            responsive:true,
+            plugins:{
+                legend:{display:false},
+                tooltip:{enabled:false},
+                datalabels:dataLabelBar
+            },
+            scales:{ y:{beginAtZero:true} }
+        }
+    },
+    distS2: {
+        type:'bar',
+        data:{ labels:Object.keys(session2),
+               datasets:[{ data:Object.values(session2), backgroundColor:'#10b981cc' }] },
+        options:{
+            responsive:true,
+            plugins:{
+                legend:{display:false},
+                tooltip:{enabled:false},
+                datalabels:dataLabelBar
+            },
+            scales:{ y:{beginAtZero:true} }
+        }
+    },
+    distTotal:{
+        type:'pie',
+        data:{ labels:Object.keys(overall),
+               datasets:[{ data:Object.values(overall),
+                   backgroundColor:['#3b82f6cc','#10b981cc','#fbbf24cc','#f97316cc','#8b5cf6cc','#ec4899cc'] }]},
+        options:{
+            responsive:true,
+            plugins:{
+                legend:{position:'bottom'},
+                tooltip:{enabled:false},
+                datalabels:dataLabelPie
+            }
+        }
+    },
+    timeS1:{
+        type:'bar',
+        data:{ labels:['Programación','ABCD'],
+               datasets:[{ data:[tiempoProg1/60,tiempoAbcd1/60], backgroundColor:'#60a5facf' }] },
+        options:{
+            responsive:true,
+            plugins:{ legend:{display:false}, tooltip:{enabled:false}, datalabels:dataLabelBar },
+            scales:{ y:{beginAtZero:true} }
+        }
+    },
+    timeS2:{
+        type:'bar',
+        data:{ labels:['Programación','Lectura','Abiertas','ABCD'],
+               datasets:[{ data:[tiempoProg2/60,tiempoLectura/60,tiempoAbiertas/60,tiempoAbcd2/60], backgroundColor:'#f97316aa' }] },
+        options:{
+            responsive:true,
+            plugins:{ legend:{display:false}, tooltip:{enabled:false}, datalabels:dataLabelBar },
+            scales:{ y:{beginAtZero:true} }
+        }
+    },
+    timeCompare:{
+        type:'bar',
+        data:{ labels:['Sesión 1','Sesión 2'],
+               datasets:[{ data:[t1,t2], backgroundColor:['#3b82f6cc','#10b981cc'] }] },
+        options:{
+            responsive:true,
+            plugins:{ legend:{display:false}, tooltip:{enabled:false}, datalabels:dataLabelBar },
+            scales:{ y:{beginAtZero:true} }
+        }
+    },
+    timePie:{
+        type:'pie',
+        data:{ labels:Object.keys(tiemposTotalesCategoria),
+               datasets:[{ data:Object.values(tiemposTotalesCategoria),
+                   backgroundColor:['#3b82f6cc','#8b5cf6cc','#fbbf24cc','#10b981cc'] }]},
+        options:{
+            responsive:true,
+            plugins:{ legend:{position:'bottom'}, tooltip:{enabled:false}, datalabels:dataLabelPie }
+        }
+    },
+    timeAvg:{
+        type:'bar',
+        data:{ labels:['Prog Simple','Prog Compleja','Lectura','Abiertas','ABCD'],
+               datasets:[{ data:[30,62,120,60,12], backgroundColor:'#6366f1cc' }]},
+        options:{
+            responsive:true,
+            plugins:{ legend:{display:false}, tooltip:{enabled:false}, datalabels:dataLabelBar },
+            scales:{ y:{beginAtZero:true} }
+        }
+    }
+};
+
+/* ============================
+   Crear gráficas pequeñas
+============================ */
+function createSmallCharts(){
+    const ids = {
+        distS1:"chart-dist-s1", distS2:"chart-dist-s2", distTotal:"chart-dist-total",
+        timeS1:"chart-time-s1", timeS2:"chart-time-s2", timeCompare:"chart-time-compare",
+        timePie:"chart-time-pie", timeAvg:"chart-time-avg"
+    };
+    for (let key in ids){
+        smallCharts[key] = new Chart(
+            document.getElementById(ids[key]).getContext('2d'),
+            config[key]
+        );
+    }
+}
+
+/* ============================
+   Modal
+============================ */
+function openModalChart(title,key){
+    document.getElementById("modal-title").textContent = title;
+    document.getElementById("modal-bg").style.display = "flex";
+
+    const ctx = document.getElementById("modal-canvas").getContext("2d");
+    if(modalChart) modalChart.destroy();
+    modalChart = new Chart(ctx, config[key]);
+}
+function closeModal(){
+    document.getElementById("modal-bg").style.display = "none";
+    if(modalChart){ modalChart.destroy(); modalChart=null; }
+}
+document.getElementById("modal-bg").addEventListener("click", closeModal);
+document.addEventListener("keydown", e => { if(e.key==="Escape") closeModal(); });
+
+/* ============================
+   Init
+============================ */
+window.onload = () => {
+    animateValue(document.getElementById('kpi-total-preguntas'),0,totalPreguntas,900,0);
+    animateValue(document.getElementById('kpi-tiempo-total'),0,tTotal,1000,1);
+    animateValue(document.getElementById('kpi-tiempo-s1'),0,t1,1000,1);
+    animateValue(document.getElementById('kpi-tiempo-s2'),0,t2,1000,1);
+    createSmallCharts();
+};
+</script>
+
+</body>
+</html>
